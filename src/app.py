@@ -15,206 +15,19 @@ from llm_feedback import get_feedback
 from resume_parser import parse_resume
 from report import generate_report
 from matcher import _load_model
-_load_model()  # loads once at startup, cached after
+_load_model()
  
-# ─────────────────────────────────────────
-# PAGE CONFIG
-# ─────────────────────────────────────────
-st.set_page_config(page_title="RecruitLens AI", page_icon="⬡", layout="wide")
+st.set_page_config(
+    page_title="RecruitLens · AI Screening",
+    page_icon="◎",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
  
-# ─────────────────────────────────────────
-# CUSTOM CSS
-# ─────────────────────────────────────────
-st.markdown("""
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap');
+# Load external CSS
+with open("src/styles.css") as css_file:
+    st.markdown(f"<style>{css_file.read()}</style>", unsafe_allow_html=True)
  
-*, *::before, *::after { box-sizing: border-box; }
-html, body, [class*="css"] {
-    font-family: 'DM Mono', monospace;
-    background-color: #080C10 !important;
-    color: #C8D6E5 !important;
-}
-#MainMenu, footer, header { visibility: hidden; }
-.stDeployButton, div[data-testid="stToolbar"] { display: none; }
- 
-.stApp {
-    background: #080C10 !important;
-    background-image:
-        radial-gradient(ellipse 80% 50% at 20% -10%, rgba(0,230,180,0.06) 0%, transparent 60%),
-        radial-gradient(ellipse 60% 40% at 80% 110%, rgba(0,120,255,0.05) 0%, transparent 60%) !important;
-}
-[data-testid="stSidebar"] {
-    background: #0D1117 !important;
-    border-right: 1px solid rgba(0,230,180,0.12) !important;
-}
-[data-testid="stSidebar"] * { color: #8BA7C7 !important; }
-[data-testid="stSidebar"] input {
-    background: #131A22 !important;
-    border: 1px solid rgba(0,230,180,0.2) !important;
-    color: #C8D6E5 !important;
-    border-radius: 4px !important;
-    font-family: 'DM Mono', monospace !important;
-}
-[data-testid="stSidebar"] .stButton > button {
-    background: transparent !important;
-    border: 1px solid rgba(0,230,180,0.4) !important;
-    color: #00E6B4 !important;
-    font-family: 'DM Mono', monospace !important;
-    letter-spacing: 0.08em;
-    font-size: 0.78rem !important;
-    width: 100%;
-    transition: all 0.2s;
-}
-[data-testid="stSidebar"] .stButton > button:hover { background: rgba(0,230,180,0.1) !important; }
- 
-button[data-baseweb="tab"] {
-    background: transparent !important;
-    color: #4A6A8A !important;
-    font-family: 'DM Mono', monospace !important;
-    font-size: 0.78rem !important;
-    letter-spacing: 0.12em !important;
-    text-transform: uppercase;
-    border: none !important;
-    padding: 12px 20px !important;
-    transition: color 0.2s;
-}
-button[data-baseweb="tab"]:hover { color: #C8D6E5 !important; }
-button[data-baseweb="tab"][aria-selected="true"] {
-    color: #00E6B4 !important;
-    border-bottom: 2px solid #00E6B4 !important;
-    background: transparent !important;
-}
-[data-testid="stTabPanel"] { padding-top: 28px !important; }
- 
-[data-testid="stMetric"] {
-    background: #0D1117;
-    border: 1px solid rgba(0,230,180,0.12);
-    border-left: 3px solid #00E6B4;
-    padding: 18px 22px;
-    border-radius: 2px;
-}
-[data-testid="stMetricLabel"] {
-    font-family: 'DM Mono', monospace !important;
-    font-size: 0.7rem !important;
-    letter-spacing: 0.15em !important;
-    text-transform: uppercase !important;
-    color: #4A6A8A !important;
-}
-[data-testid="stMetricValue"] {
-    font-family: 'Syne', sans-serif !important;
-    font-size: 2.2rem !important;
-    font-weight: 800 !important;
-    color: #F0F6FF !important;
-}
- 
-.stButton > button {
-    background: transparent !important;
-    border: 1px solid rgba(0,230,180,0.5) !important;
-    color: #00E6B4 !important;
-    font-family: 'DM Mono', monospace !important;
-    font-size: 0.78rem !important;
-    letter-spacing: 0.1em !important;
-    padding: 10px 24px !important;
-    border-radius: 2px !important;
-    transition: all 0.25s ease !important;
-}
-.stButton > button:hover {
-    background: rgba(0,230,180,0.08) !important;
-    box-shadow: 0 0 20px rgba(0,230,180,0.15) !important;
-    transform: translateY(-1px) !important;
-}
- 
-textarea {
-    background: #0D1117 !important;
-    border: 1px solid rgba(0,230,180,0.15) !important;
-    color: #C8D6E5 !important;
-    font-family: 'DM Mono', monospace !important;
-    font-size: 0.82rem !important;
-    border-radius: 2px !important;
-}
-textarea:focus {
-    border-color: rgba(0,230,180,0.5) !important;
-    box-shadow: 0 0 0 2px rgba(0,230,180,0.06) !important;
-}
- 
-[data-testid="stSlider"] .rc-slider-track { background: #00E6B4 !important; }
-[data-testid="stSlider"] .rc-slider-handle {
-    background: #00E6B4 !important;
-    border-color: #00E6B4 !important;
-    box-shadow: 0 0 8px rgba(0,230,180,0.5) !important;
-}
- 
-[data-testid="stFileUploader"] {
-    border: 1px dashed rgba(0,230,180,0.25) !important;
-    background: #0D1117 !important;
-    border-radius: 4px !important;
-    padding: 12px !important;
-}
-[data-testid="stFileUploadDropzone"] { background: transparent !important; }
-[data-testid="stDataFrame"] { border: 1px solid rgba(0,230,180,0.1) !important; border-radius: 2px !important; }
- 
-[data-testid="stDownloadButton"] > button {
-    background: rgba(0,230,180,0.08) !important;
-    border: 1px solid rgba(0,230,180,0.4) !important;
-    color: #00E6B4 !important;
-    font-family: 'DM Mono', monospace !important;
-    font-size: 0.75rem !important;
-    letter-spacing: 0.1em !important;
-}
- 
-[data-testid="stAlert"] {
-    background: #0D1117 !important;
-    border-radius: 2px !important;
-    border-left: 3px solid #00E6B4 !important;
-    font-family: 'DM Mono', monospace !important;
-    font-size: 0.8rem !important;
-}
-.stSuccess { background: rgba(0,230,180,0.05) !important; border-left: 3px solid #00E6B4 !important; color: #00E6B4 !important; }
-.stWarning { background: rgba(255,180,0,0.05) !important; border-left: 3px solid #FFB400 !important; color: #FFB400 !important; }
-.stError   { background: rgba(255,70,70,0.05)  !important; border-left: 3px solid #FF4646 !important; }
- 
-hr { border-color: rgba(0,230,180,0.1) !important; margin: 28px 0 !important; }
-h1, h2, h3 { font-family: 'Syne', sans-serif !important; letter-spacing: -0.01em; }
-.stMarkdown h3 {
-    color: #E8F0FA !important;
-    font-weight: 700 !important;
-    font-size: 1rem !important;
-    letter-spacing: 0.05em !important;
-    text-transform: uppercase;
-    border-bottom: 1px solid rgba(0,230,180,0.12);
-    padding-bottom: 8px;
-    margin-top: 28px;
-}
-label, .stSelectbox label, .stTextArea label, .stSlider label {
-    font-family: 'DM Mono', monospace !important;
-    font-size: 0.72rem !important;
-    letter-spacing: 0.12em !important;
-    text-transform: uppercase !important;
-    color: #4A6A8A !important;
-}
-</style>
-""", unsafe_allow_html=True)
- 
-# ─────────────────────────────────────────
-# HEADER
-# ─────────────────────────────────────────
-st.markdown("""
-<div style="display:flex;align-items:baseline;gap:16px;padding:36px 0 8px;
-border-bottom:1px solid rgba(0,230,180,0.12);margin-bottom:32px;">
-    <span style="font-family:'Syne',sans-serif;font-size:2.4rem;font-weight:800;
-    color:#F0F6FF;letter-spacing:-0.03em;line-height:1;">RecruitLens</span>
-    <span style="font-family:'DM Mono',monospace;font-size:0.7rem;color:#00E6B4;
-    letter-spacing:0.2em;text-transform:uppercase;padding:3px 8px;
-    border:1px solid rgba(0,230,180,0.35);border-radius:2px;">AI · v2.0</span>
-    <span style="font-family:'DM Mono',monospace;font-size:0.72rem;color:#4A6A8A;
-    margin-left:auto;letter-spacing:0.05em;">Resume Intelligence Platform</span>
-</div>
-""", unsafe_allow_html=True)
- 
-# ─────────────────────────────────────────
-# LOAD MODEL
-# ─────────────────────────────────────────
 @st.cache_resource
 def load_model_files():
     model = joblib.load("src/model.pkl")
@@ -223,122 +36,273 @@ def load_model_files():
  
 model, vectorizer = load_model_files()
  
-# ─────────────────────────────────────────
-# LOAD DATASET
-# ─────────────────────────────────────────
 @st.cache_data
 def load_dataset(path):
     df = pd.read_csv(path)
     df = preprocess_dataframe(df)
     return df
  
-# ─────────────────────────────────────────
-# SIDEBAR
-# ─────────────────────────────────────────
-st.sidebar.markdown("""
-<div style="font-family:'DM Mono',monospace;font-size:0.65rem;letter-spacing:0.2em;
-text-transform:uppercase;color:#00E6B4;padding:20px 0 12px;
-border-bottom:1px solid rgba(0,230,180,0.12);margin-bottom:20px;">⬡ Data Source</div>
-""", unsafe_allow_html=True)
- 
-csv_path = st.sidebar.text_input("Resume CSV Path", value="data/Resume.csv")
- 
-if st.sidebar.button("↻  Load Dataset"):
-    try:
-        st.session_state["df"] = load_dataset(csv_path)
-        st.sidebar.success(f"✓  {len(st.session_state['df'])} resumes loaded")
-    except Exception as e:
-        st.sidebar.error(f"Error: {e}")
- 
-st.sidebar.markdown("""
-<div style="font-family:'DM Mono',monospace;font-size:0.62rem;color:#2A4060;
-margin-top:40px;padding-top:16px;border-top:1px solid rgba(0,230,180,0.06);line-height:1.6;">
-MODEL · SENTENCE TRANSFORMERS<br>MATCH · COSINE SIMILARITY<br>
-NLP · SPACY NER · GEMINI LLM
+# Header
+st.markdown("""
+<div style="padding: 56px 0 40px; border-bottom: 1px solid var(--rule);">
+  <div style="display:flex; align-items:center; gap:16px; margin-bottom:24px;">
+    <svg width="48" height="48" viewBox="0 0 48 48" class="animated-logo">
+      <circle cx="24" cy="24" r="20" fill="none" stroke="#16A34A" stroke-width="2" opacity="0.3"/>
+      <circle cx="24" cy="24" r="14" fill="none" stroke="#16A34A" stroke-width="2" opacity="0.6"/>
+      <circle cx="24" cy="24" r="8" fill="none" stroke="#16A34A" stroke-width="2.5"/>
+      <circle cx="24" cy="24" r="3" fill="#16A34A"/>
+    </svg>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <span style="font-family:'IBM Plex Mono',monospace; font-size:0.65rem;
+        letter-spacing:0.22em; text-transform:uppercase; color:var(--ink-mute);">
+        Resume Intelligence
+      </span>
+      <div style="flex:1; height:1px; background:var(--rule);"></div>
+      <span style="font-family:'IBM Plex Mono',monospace; font-size:0.65rem;
+        letter-spacing:0.15em; color:var(--ink-mute);">v 2.0</span>
+    </div>
+  </div>
+  <div style="display:flex; align-items:flex-end; gap:0; line-height:1;">
+    <b><h1 style="font-family:'Cormorant Garamond',serif !important;
+      font-size:4.8rem; font-weight:300; color:var(--ink) !important;
+      letter-spacing:-0.03em; margin:0; padding:0;">Recruit</h1></b>
+    <h1 style="font-family:'Cormorant Garamond',serif !important;
+      font-size:4.8rem; font-weight:700; color:var(--green) !important;
+      letter-spacing:-0.03em; margin:0; padding:0;">Lens</h1>
+    <span style="font-family:'IBM Plex Mono',monospace; font-size:0.75rem;
+      color:var(--ink-mute); margin-left:20px; margin-bottom:10px; letter-spacing:0.08em;">
+      AI · Precision Hiring
+    </span>
+  </div>
+  <p style="font-family:'Cormorant Garamond',serif; font-size:1.15rem;
+    font-weight:300; font-style:italic; color:var(--ink-soft); margin-top:10px;
+    letter-spacing:0.01em;">
+    Match, screen &amp; evaluate candidates with machine intelligence.
+  </p>
 </div>
 """, unsafe_allow_html=True)
  
-# ─────────────────────────────────────────
-# TABS
-# ─────────────────────────────────────────
-tab1, tab2 = st.tabs(["⬡  BULK SCREENING", "◈  SINGLE ANALYZER"])
+st.markdown("<div style='height:40px'></div>", unsafe_allow_html=True)
+tab1, tab2, tab3 = st.tabs(["◎  Bulk Screening", "◈  Resume Analyzer", "◇  How It Works"])
  
-# ══════════════════════════════════════════
-# TAB 1 — BULK SCREENING
-# ══════════════════════════════════════════
 with tab1:
- 
+    st.markdown("""
+    <div style="font-family:'Cormorant Garamond',serif; font-size:1.5rem;
+      font-weight:600; color:var(--ink); margin-bottom:4px;">Configuration</div>
+    <div style="font-family:'IBM Plex Mono',monospace; font-size:0.65rem;
+      letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-mute);
+      margin-bottom:28px; padding-bottom:20px;
+      border-bottom:1px solid var(--rule);">Data Source &amp; Settings</div>
+    """, unsafe_allow_html=True)
+    
+    csv_path = st.text_input("Resume CSV Path", value="data/Resume.csv")
+    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+    
+    if st.button("↻  Load Dataset"):
+        try:
+            st.session_state["df"] = load_dataset(csv_path)
+            st.success(f"✓  {len(st.session_state['df'])} resumes loaded")
+        except Exception as e:
+            st.error(f"Error loading: {e}")
+    
+    st.markdown("""
+    <div style="margin-top:48px; padding-top:20px; border-top:1px solid var(--rule);">
+      <div style="font-family:'IBM Plex Mono',monospace; font-size:0.6rem;
+        letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-mute);
+        line-height:2.2;">
+        Stack<br>
+        <span style="color:var(--ink-soft);">Sentence Transformers · Cosine Similarity</span><br>
+        <span style="color:var(--ink-soft);">spaCy NER · Gemini LLM · sklearn</span>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.divider()
+    st.markdown("<div style='height:32px'></div>", unsafe_allow_html=True)
+    
     if "df" not in st.session_state:
         st.markdown("""
-        <div style="border:1px dashed rgba(0,230,180,0.15);border-radius:4px;
-        padding:48px;text-align:center;margin:24px 0;">
-            <div style="font-family:'Syne',sans-serif;font-size:1.4rem;color:#2A4060;margin-bottom:8px;">No Dataset Loaded</div>
-            <div style="font-family:'DM Mono',monospace;font-size:0.75rem;color:#2A4060;letter-spacing:0.05em;">
-                Enter CSV path in sidebar → click Load Dataset
-            </div>
+        <div style="display:flex; flex-direction:column; align-items:center;
+          justify-content:center; padding:80px 40px; text-align:center;
+          border:1.5px dashed var(--rule); border-radius:8px; background:var(--surface);
+          margin:24px 0;">
+          <div style="width:48px; height:48px; border:1.5px solid var(--rule);
+            border-radius:50%; display:flex; align-items:center; justify-content:center;
+            margin-bottom:20px; font-size:1.4rem;">◎</div>
+          <div style="font-family:'Cormorant Garamond',serif; font-size:1.8rem;
+            font-weight:600; color:var(--ink); margin-bottom:8px;">No Dataset Loaded</div>
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:0.75rem;
+            color:var(--ink-mute); letter-spacing:0.06em; max-width:340px; line-height:1.7;">
+            Load your resume CSV above to start screening candidates.
+          </div>
         </div>
         """, unsafe_allow_html=True)
     else:
         df = st.session_state["df"]
+        st.markdown(f"""
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:32px;
+          padding:12px 20px; background:var(--green-bg);
+          border-left:3px solid var(--green); border-radius:0 6px 6px 0;">
+          <span style="font-family:'IBM Plex Mono',monospace; font-size:0.72rem;
+            letter-spacing:0.1em; color:var(--green);">
+            ✓ &nbsp; Dataset loaded — <strong>{len(df):,}</strong> resumes
+          </span>
+        </div>
+        """, unsafe_allow_html=True)
  
-        c1, c2, c3 = st.columns(3)
-        c1.metric("TOTAL RESUMES", len(df))
-        c2.metric("CATEGORIES", df["Category"].nunique())
-        c3.metric("FIELDS", len(df.columns))
- 
+        c1, c2, c3, c4 = st.columns(4)
+        c1.metric("Total Resumes", f"{len(df):,}")
+        c2.metric("Job Categories", df["Category"].nunique())
+        c3.metric("Data Fields", len(df.columns))
+        
+        col_name = "clean_resume" if "clean_resume" in df.columns else "Resume_str"
+        c4.metric(
+            "Avg. Text Length",
+            f"{int(df[col_name].astype(str).str.len().mean()):,}"
+            )
+         
+        st.markdown("<div style='height:32px'></div>", unsafe_allow_html=True)
+        st.markdown("""
+        <div style="font-family:'Cormorant Garamond',serif; font-size:1.5rem;
+          font-weight:600; color:var(--ink); margin-bottom:4px;">Category Distribution</div>
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:0.7rem;
+          color:var(--ink-mute); letter-spacing:0.08em; margin-bottom:16px;">
+          Resume pool breakdown by job function
+        </div>
+        """, unsafe_allow_html=True)
         st.plotly_chart(category_pie(df), use_container_width=True)
+ 
         st.divider()
  
-        st.markdown('<p style="font-family:\'DM Mono\',monospace;font-size:0.7rem;letter-spacing:0.15em;text-transform:uppercase;color:#4A6A8A;margin-bottom:6px;">Job Description</p>', unsafe_allow_html=True)
-        jd = st.text_area("", height=200, key="bulk_jd", label_visibility="collapsed",
-                          placeholder="Paste the full job description here…")
+        st.markdown("""
+        <div style="font-family:'Cormorant Garamond',serif; font-size:1.5rem;
+          font-weight:600; color:var(--ink); margin-bottom:4px;">Screening Parameters</div>
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:0.7rem;
+          color:var(--ink-mute); letter-spacing:0.08em; margin-bottom:20px;">
+          Define the role to match candidates against
+        </div>
+        """, unsafe_allow_html=True)
  
-        col_s, col_b = st.columns([1, 3])
-        with col_s:
-            top_n = st.slider("Top N matches", 5, 20, 10)
+        jd = st.text_area("Job Description", height=220, key="bulk_jd",
+            placeholder="Paste the full job description here…")
+ 
+        col_a, col_b = st.columns([2, 1])
+        with col_a:
+            top_n = st.slider("Top N Candidates", min_value=3, max_value=30, value=10)
         with col_b:
             st.markdown("<div style='height:28px'></div>", unsafe_allow_html=True)
-            run = st.button("⬡  RUN MATCHING ANALYSIS")
+            run = st.button("◎  Run Matching Analysis")
  
         if run:
             if not jd.strip():
-                st.warning("Paste a job description to continue.")
+                st.warning("Please paste a job description before running.")
             else:
                 with st.spinner("Analysing candidate pool…"):
                     results = match_resumes(jd, df, top_n)
  
-                st.success(f"✓  Top {top_n} candidates identified")
+                st.markdown(f"""
+                <div style="display:grid; grid-template-columns:1fr 1fr;
+                  gap:16px; margin:32px 0 24px; padding:28px 32px;
+                  background:var(--surface); border:1px solid var(--rule); border-radius:8px;
+                  box-shadow:var(--shadow);">
+                  <div>
+                    <div style="font-family:'IBM Plex Mono',monospace; font-size:0.62rem;
+                      letter-spacing:0.18em; text-transform:uppercase; color:var(--ink-mute);
+                      margin-bottom:4px;">Top Candidates Found</div>
+                    <div style="font-family:'Cormorant Garamond',serif; font-size:3rem;
+                      font-weight:600; color:var(--ink); line-height:1;">{len(results)}</div>
+                  </div>
+                  <div>
+                    <div style="font-family:'IBM Plex Mono',monospace; font-size:0.62rem;
+                      letter-spacing:0.18em; text-transform:uppercase; color:var(--ink-mute);
+                      margin-bottom:4px;">Highest Match Score</div>
+                    <div style="font-family:'Cormorant Garamond',serif; font-size:3rem;
+                      font-weight:600; color:var(--green); line-height:1;">
+                      {results['match_score'].max():.1f}%
+                    </div>
+                  </div>
+                </div>
+                """, unsafe_allow_html=True)
+ 
+                st.markdown("""
+                <div style="font-family:'Cormorant Garamond',serif; font-size:1.5rem;
+                  font-weight:600; color:var(--ink); margin-bottom:16px;">
+                  Match Score Rankings
+                </div>
+                """, unsafe_allow_html=True)
                 st.plotly_chart(score_bar_chart(results), use_container_width=True)
  
-                st.markdown("### Match Results")
-                st.dataframe(results[["ID", "Category", "match_score"]], use_container_width=True)
+                col_t, col_w = st.columns([1, 1], gap="large")
  
-                st.markdown("### Word Cloud — Top Resumes")
-                combined_text = " ".join(results["clean_resume"].tolist())
-                st.plotly_chart(generate_wordcloud_img(combined_text), use_container_width=True)
+                with col_t:
+                    st.markdown("""
+                    <div style="font-family:'Cormorant Garamond',serif; font-size:1.4rem;
+                      font-weight:600; color:var(--ink); margin-bottom:12px;">
+                      Candidate Shortlist
+                    </div>
+                    """, unsafe_allow_html=True)
+                    display_df = results[["ID", "Category", "match_score"]].copy()
+                    display_df.columns = ["ID", "Category", "Score (%)"]
+                    display_df["Score (%)"] = display_df["Score (%)"].round(2)
+                    st.dataframe(display_df, use_container_width=True, hide_index=True)
  
-                csv_out = results[["ID", "Category", "match_score"]].to_csv(index=False)
-                st.download_button("⬇  Export Results as CSV", csv_out, "resume_matches.csv", "text/csv")
+                    st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
+                    csv_out = results[["ID", "Category", "match_score"]].to_csv(index=False)
+                    st.download_button("⬇  Export Shortlist as CSV", csv_out, "resume_matches.csv", "text/csv")
  
-# ══════════════════════════════════════════
-# TAB 2 — SINGLE RESUME ANALYZER
-# ══════════════════════════════════════════
+                with col_w:
+                    st.markdown("""
+                    <div style="font-family:'Cormorant Garamond',serif; font-size:1.4rem;
+                      font-weight:600; color:var(--ink); margin-bottom:12px;">
+                      Keyword Landscape
+                    </div>
+                    """, unsafe_allow_html=True)
+                    combined_text = " ".join(results["clean_resume"].tolist())
+                    st.plotly_chart(generate_wordcloud_img(combined_text), use_container_width=True)
+ 
 with tab2:
+    st.markdown("""
+    <div style="font-family:'Cormorant Garamond',serif; font-size:1.5rem;
+      font-weight:600; color:var(--ink); margin-bottom:6px;">Resume Deep Analysis</div>
+    <div style="font-family:'IBM Plex Mono',monospace; font-size:0.7rem;
+      color:var(--ink-mute); letter-spacing:0.06em; margin-bottom:32px;">
+      Upload a single resume PDF for full candidate evaluation
+    </div>
+    """, unsafe_allow_html=True)
  
-    c1, c2 = st.columns([1, 1], gap="large")
-    with c1:
-        st.markdown('<p style="font-family:\'DM Mono\',monospace;font-size:0.7rem;letter-spacing:0.15em;text-transform:uppercase;color:#4A6A8A;margin-bottom:6px;">Upload Resume</p>', unsafe_allow_html=True)
-        uploaded_file = st.file_uploader("", type=["pdf"], label_visibility="collapsed")
-    with c2:
-        st.markdown('<p style="font-family:\'DM Mono\',monospace;font-size:0.7rem;letter-spacing:0.15em;text-transform:uppercase;color:#4A6A8A;margin-bottom:6px;">Job Description (Optional)</p>', unsafe_allow_html=True)
-        jd_single = st.text_area("", height=160, key="single_jd", label_visibility="collapsed",
-                                 placeholder="Paste JD to get match score & AI feedback…")
+    col_up, col_jd = st.columns([1, 1], gap="large")
+ 
+    with col_up:
+        st.markdown("""
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:0.65rem;
+          letter-spacing:0.15em; text-transform:uppercase; color:var(--ink-soft);
+          margin-bottom:8px;">01 · Upload Resume PDF</div>
+        """, unsafe_allow_html=True)
+        uploaded_file = st.file_uploader("Resume PDF", type=["pdf"], label_visibility="collapsed",
+            help="PDF format only. Text-based PDFs recommended.")
+ 
+        if not uploaded_file:
+            st.markdown("""
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:0.7rem;
+              color:var(--ink-mute); margin-top:8px; line-height:1.7;">
+              PDF format only.<br>Text-based PDFs yield best results.
+            </div>
+            """, unsafe_allow_html=True)
+ 
+    with col_jd:
+        st.markdown("""
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:0.65rem;
+          letter-spacing:0.15em; text-transform:uppercase; color:var(--ink-soft);
+          margin-bottom:8px;">02 · Job Description <em style="text-transform:none; font-style:italic;">(optional for AI Recruiter Assessment (CTRL+ENTER))</em></div>
+        """, unsafe_allow_html=True)
+        jd_single = st.text_area("JD", height=168, key="single_jd", label_visibility="collapsed",
+            placeholder="Paste the job description for match scoring…")
  
     if uploaded_file:
         resume_text = extract_text_from_pdf(uploaded_file)
  
         if not resume_text.strip():
-            st.error("Could not extract text — ensure PDF is not scanned-only.")
+            st.error("Could not extract text from this PDF. Ensure it is not scanned/image-only.")
         else:
             cleaned_resume = clean_text(resume_text)
             resume_vec = vectorizer.transform([cleaned_resume])
@@ -346,90 +310,310 @@ with tab2:
  
             st.divider()
  
-            # ── Parsed Info
+            st.markdown("""
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:0.62rem;
+              letter-spacing:0.2em; text-transform:uppercase; color:var(--ink-mute);
+              margin-bottom:16px;">03 · Candidate Profile</div>
+            """, unsafe_allow_html=True)
+ 
             parsed = parse_resume(resume_text)
-            st.markdown(f"""
-            <div style="background:#0D1117;border:1px solid rgba(0,230,180,0.15);
-            border-radius:2px;padding:20px 24px;margin:12px 0;">
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;
-                font-family:'DM Mono',monospace;font-size:0.78rem;">
-                    <div><span style="color:#4A6A8A;">NAME &nbsp;</span><span style="color:#F0F6FF;">{parsed['name']}</span></div>
-                    <div><span style="color:#4A6A8A;">EMAIL &nbsp;</span><span style="color:#F0F6FF;">{parsed['email']}</span></div>
-                    <div><span style="color:#4A6A8A;">PHONE &nbsp;</span><span style="color:#F0F6FF;">{parsed['phone']}</span></div>
-                    <div><span style="color:#4A6A8A;">EXP &nbsp;</span><span style="color:#F0F6FF;">{parsed['experience']}</span></div>
+ 
+            col_prof, col_cat = st.columns([3, 2], gap="large")
+ 
+            with col_prof:
+                st.markdown(f"""
+                <div style="background:var(--surface); border:1px solid var(--rule);
+                  border-radius:8px; padding:28px 32px; box-shadow:var(--shadow);">
+                  <div style="font-family:'Cormorant Garamond',serif; font-size:1.9rem;
+                    font-weight:600; color:var(--ink); margin-bottom:20px; line-height:1.1;">
+                    {parsed['name'] or 'Candidate'}
+                  </div>
+                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                    <div>
+                      <div style="font-family:'IBM Plex Mono',monospace; font-size:0.6rem;
+                        letter-spacing:0.15em; text-transform:uppercase; color:var(--ink-mute);
+                        margin-bottom:3px;">Email</div>
+                      <div style="font-family:'IBM Plex Mono',monospace; font-size:0.78rem;
+                        color:var(--ink);">{parsed['email'] or '—'}</div>
+                    </div>
+                    <div>
+                      <div style="font-family:'IBM Plex Mono',monospace; font-size:0.6rem;
+                        letter-spacing:0.15em; text-transform:uppercase; color:var(--ink-mute);
+                        margin-bottom:3px;">Phone</div>
+                      <div style="font-family:'IBM Plex Mono',monospace; font-size:0.78rem;
+                        color:var(--ink);">{parsed['phone'] or '—'}</div>
+                    </div>
+                    <div style="grid-column:1/-1;">
+                      <div style="font-family:'IBM Plex Mono',monospace; font-size:0.6rem;
+                        letter-spacing:0.15em; text-transform:uppercase; color:var(--ink-mute);
+                        margin-bottom:3px;">Experience</div>
+                      <div style="font-family:'IBM Plex Mono',monospace; font-size:0.78rem;
+                        color:var(--ink);">{parsed['experience'] or '—'}</div>
+                    </div>
+                  </div>
                 </div>
-            </div>
+                """, unsafe_allow_html=True)
+ 
+            with col_cat:
+                st.markdown(f"""
+                <div style="background:linear-gradient(135deg, var(--green) 0%, var(--green-lt) 100%);
+                  border-radius:8px; padding:28px 32px; height:100%;
+                  display:flex; flex-direction:column; justify-content:center;
+                  box-shadow:0 4px 16px rgba(22,163,74,0.2);">
+                  <div style="font-family:'IBM Plex Mono',monospace; font-size:0.6rem;
+                    letter-spacing:0.2em; text-transform:uppercase; color:rgba(255,255,255,0.6);
+                    margin-bottom:8px;">AI · Predicted Role</div>
+                  <div style="font-family:'Cormorant Garamond',serif; font-size:2.2rem;
+                    font-weight:600; color:white; line-height:1.2;">
+                    {prediction}
+                  </div>
+                </div>
+                """, unsafe_allow_html=True)
+ 
+            st.markdown("<div style='height:32px'></div>", unsafe_allow_html=True)
+            st.markdown("""
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:0.62rem;
+              letter-spacing:0.2em; text-transform:uppercase; color:var(--ink-mute);
+              margin-bottom:16px;">04 · Extracted Skills</div>
             """, unsafe_allow_html=True)
  
-            # ── Category
-            st.markdown(f"""
-            <div style="background:#0D1117;border:1px solid rgba(0,230,180,0.15);
-            border-left:4px solid #00E6B4;border-radius:2px;padding:20px 28px;
-            margin:12px 0 24px;display:flex;align-items:center;gap:20px;">
-                <div style="font-family:'DM Mono',monospace;font-size:0.65rem;
-                letter-spacing:0.2em;text-transform:uppercase;color:#4A6A8A;">Predicted Category</div>
-                <div style="font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;color:#F0F6FF;">{prediction}</div>
-            </div>
-            """, unsafe_allow_html=True)
- 
-            # ── Skills
             skills = extract_skills(cleaned_resume)
-            st.markdown("### Extracted Skills")
+ 
             if skills:
-                skill_html = " ".join([
-                    f'<span style="display:inline-block;background:rgba(0,230,180,0.08);'
-                    f'border:1px solid rgba(0,230,180,0.25);color:#00E6B4;'
-                    f'font-family:\'DM Mono\',monospace;font-size:0.72rem;'
-                    f'padding:3px 10px;border-radius:2px;margin:3px 4px 3px 0;">{s}</span>'
+                skill_html = "".join([
+                    f'<span style="display:inline-block; background:var(--green-bg);'
+                    f'border:1px solid var(--green); color:var(--green);'
+                    f'font-family:\'IBM Plex Mono\',monospace; font-size:0.72rem;'
+                    f'padding:5px 14px; border-radius:100px; margin:4px 5px 4px 0;'
+                    f'transition:all 0.15s;">{s}</span>'
                     for s in skills
                 ])
-                st.markdown(skill_html, unsafe_allow_html=True)
+                st.markdown(f'<div style="padding:4px 0 12px;">{skill_html}</div>', unsafe_allow_html=True)
             else:
-                st.markdown('<span style="color:#2A4060;font-family:\'DM Mono\',monospace;font-size:0.8rem;">No recognisable skills detected.</span>', unsafe_allow_html=True)
- 
-            # ── Match Score + Missing Skills + Feedback
-            score, missing, feedback = 0.0, [], ""
+                st.markdown("""
+                <div style="font-family:'IBM Plex Mono',monospace; font-size:0.78rem;
+                  color:var(--ink-mute); padding:8px 0;">
+                  No recognisable technical skills detected.
+                </div>
+                """, unsafe_allow_html=True)
  
             if jd_single.strip():
                 from sklearn.metrics.pairwise import cosine_similarity as cos_sim
+ 
                 cleaned_jd = clean_text(jd_single)
                 jd_vec = vectorizer.transform([cleaned_jd])
                 score = round(cos_sim(resume_vec, jd_vec)[0][0] * 100, 2)
  
-                col_m, _ = st.columns([1, 2])
-                with col_m:
-                    st.metric("MATCH SCORE", f"{score}%")
+                st.divider()
+                st.markdown("""
+                <div style="font-family:'IBM Plex Mono',monospace; font-size:0.62rem;
+                  letter-spacing:0.2em; text-transform:uppercase; color:var(--ink-mute);
+                  margin-bottom:20px;">05 · Role Match Analysis</div>
+                """, unsafe_allow_html=True)
+ 
+                score_color = "var(--green)" if score >= 60 else ("#F59E0B" if score >= 35 else "#EF4444")
+                score_label = "Strong Match" if score >= 60 else ("Partial Match" if score >= 35 else "Weak Match")
+ 
+                st.markdown(f"""
+                <div style="background:var(--surface); border:1px solid var(--rule); border-radius:8px;
+                  padding:32px 36px; margin-bottom:24px; box-shadow:var(--shadow);">
+                  <div style="display:flex; align-items:flex-end; gap:24px; margin-bottom:20px;">
+                    <div>
+                      <div style="font-family:'IBM Plex Mono',monospace; font-size:0.6rem;
+                        letter-spacing:0.2em; text-transform:uppercase;
+                        color:var(--ink-mute); margin-bottom:4px;">Match Score</div>
+                      <div style="font-family:'Cormorant Garamond',serif; font-size:4rem;
+                        font-weight:600; color:{score_color}; line-height:1;">
+                        {score}<span style="font-size:2rem; opacity:0.6;">%</span>
+                      </div>
+                    </div>
+                    <div style="padding-bottom:10px;">
+                      <span style="font-family:'IBM Plex Mono',monospace; font-size:0.72rem;
+                        letter-spacing:0.08em; background:{score_color}22;
+                        color:{score_color}; border:1px solid {score_color}44;
+                        padding:5px 14px; border-radius:100px;">
+                        {score_label}
+                      </span>
+                    </div>
+                  </div>
+                  <div style="background:var(--bg-secondary); border-radius:2px; height:6px; overflow:hidden;">
+                    <div style="background:{score_color}; height:100%; width:{score}%;
+                      border-radius:2px; transition:width 0.8s ease;"></div>
+                  </div>
+                </div>
+                """, unsafe_allow_html=True)
  
                 jd_skills = extract_skills(cleaned_jd)
                 missing = list(set(jd_skills) - set(skills))
  
-                st.markdown("### Missing Skills")
-                if missing:
-                    miss_html = " ".join([
-                        f'<span style="display:inline-block;background:rgba(255,70,70,0.06);'
-                        f'border:1px solid rgba(255,70,70,0.25);color:#FF6B6B;'
-                        f'font-family:\'DM Mono\',monospace;font-size:0.72rem;'
-                        f'padding:3px 10px;border-radius:2px;margin:3px 4px 3px 0;">{s}</span>'
-                        for s in missing
-                    ])
-                    st.markdown(miss_html, unsafe_allow_html=True)
-                else:
-                    st.markdown('<span style="color:#00E6B4;font-family:\'DM Mono\',monospace;font-size:0.8rem;">✓  All required skills present.</span>', unsafe_allow_html=True)
+                col_have, col_miss = st.columns(2, gap="large")
  
-                # ── LLM Feedback
-                st.markdown("### 🤖 AI Recruiter Feedback")
-                with st.spinner("Generating feedback…"):
-                    feedback = get_feedback(resume_text, jd_single, score)
-                st.markdown(f"""
-                <div style="background:#0D1117;border-left:4px solid #00E6B4;
-                padding:16px 20px;border-radius:2px;font-family:'DM Mono',monospace;
-                font-size:0.82rem;line-height:1.7;color:#C8D6E5;">{feedback}</div>
+                with col_have:
+                    st.markdown(f"""
+                    <div style="font-family:'IBM Plex Mono',monospace; font-size:0.62rem;
+                      letter-spacing:0.15em; text-transform:uppercase; color:var(--green);
+                      margin-bottom:10px;">✓ &nbsp; Skills Matched ({len(set(skills) & set(jd_skills))})</div>
+                    """, unsafe_allow_html=True)
+                    matched = list(set(skills) & set(jd_skills))
+                    if matched:
+                        mhtml = "".join([
+                            f'<span style="display:inline-block; background:var(--green-bg);'
+                            f'border:1px solid var(--green); color:var(--green);'
+                            f'font-family:\'IBM Plex Mono\',monospace; font-size:0.7rem;'
+                            f'padding:4px 12px; border-radius:100px; margin:3px 4px 3px 0;">'
+                            f'{s}</span>'
+                            for s in matched
+                        ])
+                        st.markdown(mhtml, unsafe_allow_html=True)
+                    else:
+                        st.markdown('<span style="font-family:\'IBM Plex Mono\',monospace;font-size:0.78rem;color:var(--ink-mute);">None detected.</span>', unsafe_allow_html=True)
+ 
+                with col_miss:
+                    st.markdown(f"""
+                    <div style="font-family:'IBM Plex Mono',monospace; font-size:0.62rem;
+                      letter-spacing:0.15em; text-transform:uppercase; color:#EF4444;
+                      margin-bottom:10px;">✗ &nbsp; Skill Gaps ({len(missing)})</div>
+                    """, unsafe_allow_html=True)
+                    if missing:
+                        ghtml = "".join([
+                            f'<span style="display:inline-block; background:#FEE2E2;'
+                            f'border:1px solid #FECACA; color:#EF4444;'
+                            f'font-family:\'IBM Plex Mono\',monospace; font-size:0.7rem;'
+                            f'padding:4px 12px; border-radius:100px; margin:3px 4px 3px 0;">'
+                            f'{s}</span>'
+                            for s in missing
+                        ])
+                        st.markdown(ghtml, unsafe_allow_html=True)
+                    else:
+                        st.markdown('<span style="font-family:\'IBM Plex Mono\',monospace;font-size:0.78rem;color:var(--green);">All required skills present.</span>', unsafe_allow_html=True)
+ 
+                st.markdown("<div style='height:24px'></div>", unsafe_allow_html=True)
+                st.markdown("""
+                <div style="font-family:'IBM Plex Mono',monospace; font-size:0.62rem;
+                  letter-spacing:0.2em; text-transform:uppercase; color:var(--ink-mute);
+                  margin-bottom:16px;">06 · AI Recruiter Assessment</div>
                 """, unsafe_allow_html=True)
  
-            # ── PDF Report
-            st.divider()
-            pdf_bytes = generate_report(parsed, prediction, skills, score, missing, feedback)
-            st.download_button("⬇  Download PDF Report", pdf_bytes, "candidate_report.pdf", "application/pdf")
+                with st.spinner("Generating expert assessment…"):
+                    feedback = get_feedback(resume_text, jd_single, score)
  
-# python -m streamlit run src/app.py
+                st.markdown(f"""
+                <div style="background:var(--surface); border:1px solid var(--rule);
+                  border-left:4px solid var(--green); border-radius:0 8px 8px 0;
+                  padding:28px 32px; box-shadow:var(--shadow);">
+                  <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+                    <div style="width:28px; height:28px; background:var(--green); border-radius:50%;
+                      display:flex; align-items:center; justify-content:center;
+                      font-size:0.7rem; color:white;">AI</div>
+                    <div style="font-family:'IBM Plex Mono',monospace; font-size:0.65rem;
+                      letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-soft);">
+                      Gemini · Recruiter Intelligence
+                    </div>
+                  </div>
+                  <div style="font-family:'IBM Plex Sans',sans-serif; font-size:0.88rem;
+                    line-height:1.8; color:var(--ink-soft);">
+                    {feedback}
+                  </div>
+                </div>
+                """, unsafe_allow_html=True)
+ 
+            st.divider()
+            st.markdown("""
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:0.62rem;
+              letter-spacing:0.2em; text-transform:uppercase; color:var(--ink-mute);
+              margin-bottom:12px;">07 · Export</div>
+            """, unsafe_allow_html=True)
+ 
+            pdf_bytes = generate_report(parsed, prediction, skills, score if jd_single.strip() else 0, missing if jd_single.strip() else [], feedback if jd_single.strip() else "")
+ 
+            col_dl, _ = st.columns([1, 3])
+            with col_dl:
+                st.download_button("⬇  Download Full PDF Report", pdf_bytes, "candidate_report.pdf", "application/pdf", use_container_width=True)
+ 
+with tab3:
+    st.markdown("""
+    <div style="max-width:760px; margin:0 auto; padding:8px 0 60px;">
+      <div style="font-family:'Cormorant Garamond',serif; font-size:2.4rem;
+        font-weight:300; color:var(--ink); margin-bottom:8px; line-height:1.2;">
+        The Intelligence Behind<br>
+        <em style="font-weight:600;">RecruitLens</em>
+      </div>
+      <div style="font-family:'IBM Plex Mono',monospace; font-size:0.72rem;
+        color:var(--ink-mute); letter-spacing:0.06em; margin-bottom:48px;">
+        A brief overview of the technology stack and methodology
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
+ 
+    steps = [
+        ("01", "Text Extraction", "IBM Plex Mono",
+         "PDFs are parsed using PyMuPDF to extract raw text. For scanned documents, OCR is applied as a fallback."),
+        ("02", "NLP Preprocessing", "Tokenisation + Cleaning",
+         "Text is cleaned, tokenised, stop-words removed, and lemmatised using spaCy. The resulting corpus is normalised."),
+        ("03", "Semantic Embedding", "Sentence Transformers",
+         "Both resumes and job descriptions are encoded into dense vector representations using Sentence Transformers."),
+        ("04", "Similarity Ranking", "Cosine Similarity",
+         "Candidate vectors are ranked against the job description vector using cosine similarity."),
+        ("05", "Skill Extraction", "spaCy NER + Custom Taxonomy",
+         "A NER pipeline enriched with a curated 500+ skill taxonomy identifies technical and soft skills."),
+        ("06", "AI Assessment", "Google Gemini LLM",
+         "The full resume text, job description, and computed match score are sent to Gemini for contextual evaluation."),
+    ]
+ 
+    for num, title, sub, desc in steps:
+        st.markdown(f"""
+        <div style="display:flex; gap:32px; padding:28px 0;
+          border-bottom:1px solid var(--rule); max-width:760px;">
+          <div style="flex-shrink:0; width:44px;">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:0.65rem;
+              letter-spacing:0.12em; color:var(--ink-mute); margin-top:4px;">{num}</div>
+          </div>
+          <div style="flex:1;">
+            <div style="font-family:'Cormorant Garamond',serif; font-size:1.3rem;
+              font-weight:600; color:var(--ink); margin-bottom:2px;">{title}</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:0.65rem;
+              letter-spacing:0.1em; text-transform:uppercase; color:var(--green);
+              margin-bottom:10px;">{sub}</div>
+            <div style="font-family:'IBM Plex Sans',sans-serif; font-size:0.86rem;
+              line-height:1.75; color:var(--ink-soft);">{desc}</div>
+          </div>
+        </div>
+        """, unsafe_allow_html=True)
+ 
+    st.markdown("""
+    <div style="max-width:760px; background:var(--green); border-radius:8px;
+      padding:32px 40px; margin-top:40px;">
+      <div style="font-family:'Cormorant Garamond',serif; font-size:1.6rem;
+        font-weight:600; color:white; margin-bottom:8px;">
+        Built for Recruiters, Powered by AI
+      </div>
+      <div style="font-family:'IBM Plex Sans',sans-serif; font-size:0.85rem;
+        color:rgba(255,255,255,0.75); line-height:1.7;">
+        RecruitLens is designed to augment — not replace — recruiter judgment.
+        It surfaces signal in high-volume candidate pools.
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
+ 
+st.markdown("""
+<div style="border-top:1px solid var(--rule); margin-top:60px; padding:28px 0;
+  display:flex; align-items:center; justify-content:space-between;">
+  <div style="font-family:'IBM Plex Mono',monospace; font-size:0.65rem;
+    letter-spacing:0.1em; color:var(--ink-mute);">
+    RecruitLens AI · v2.0 · Resume Intelligence Platform
+  </div>
+  <div style="font-family:'IBM Plex Mono',monospace; font-size:0.62rem;
+    color:var(--ink-mute); letter-spacing:0.06em;">
+    Sentence Transformers · spaCy · Gemini · sklearn
+  </div>
+</div>
+""", unsafe_allow_html=True)
+ 
+
+
+ # python -m streamlit run src/app.py
+
+
+
+
  
