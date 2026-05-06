@@ -1,12 +1,11 @@
 # 🔍 RecruitLens
+
 ### *AI-powered Resume Screening & Intelligent Job Matching — built for speed, accuracy, and scale.*
 
-<p align="center">
 ![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)
 ![AI](https://img.shields.io/badge/AI--Powered-Groq%20%7C%20Llama3-blueviolet?style=for-the-badge)
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
-</p>
 
 ---
 
